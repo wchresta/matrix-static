@@ -1,0 +1,49 @@
+name:                matrix-static
+version:             0.1
+github:              "wchresta/matrix-static"
+license:             BSD3
+author:              "Wanja Chresta"
+maintainer:          "wanja.hs@chrummibei.ch"
+copyright:           "2018, Wanja Chresta"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+tested-with: GHC == 8.4.3, GHC == 8.2.2, GHC == 8.0.2, GHC == 7.10.3, GHC == 7.8.4
+
+# Metadata used when publishing your package
+synopsis:            Wrapper around matrix that adds matrix sizes to the type-level
+category:            Math
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/wchresta/matrix-static#readme>
+
+dependencies:
+    - base >= 4.7 && < 5
+    - matrix >= 0.3.6 && < 0.4
+    - deepseq
+    - semigroups
+    - vector
+    - ghc-typelits-natnormalise
+    - ghc-typelits-knownnat
+
+library:
+  source-dirs: src
+  ghc-options:
+    - -Wall
+
+tests:
+  matrix-static-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - matrix-static
+    - tasty
+
