@@ -40,7 +40,7 @@ module Data.Matrix.Static (
   , zero
   , identity
   , diagonal, diagonalUnsafe
-  , permMatrix
+  , permMatrix, permMatrixUnsafe
     -- * List conversions
   , fromList, fromListUnsafe, fromLists, fromListsUnsafe
   , toList, toLists
@@ -121,8 +121,10 @@ newtype Matrix (m :: Nat) (n :: Nat) (a :: *) = Matrix (M.Matrix a)
   deriving ( Eq, Functor, Applicative, Foldable, Traversable
            , Monoid, NFData
            )
+#if MIN_VERSION_base(4,10,0)
 instance Monoid a => S.Semigroup (Matrix m n a) where
-    (<>) = mappend
+    (<>) = applyBinary mappend
+#endif
 
 
 nrows :: forall m n a. KnownNat m => Matrix m n a -> Int
@@ -323,7 +325,7 @@ zero = Matrix $ M.zero m n
 -- | The elements are 1-indexed, i.e. top-left element is @(1,1)@.
 --   Example of usage:
 --
--- > matrix $ \(i,j) -> 2*i - j :: Matrix 4 4 Int
+-- > matrix (\(i,j) -> 2*i - j) :: Matrix 2 4 Int
 -- > ( 1  0 -1 -2 )
 -- > ( 3  2  1  0 )
 matrix :: forall m n a. (KnownNat m, KnownNat n)
@@ -446,7 +448,7 @@ fromListsUnsafe = Matrix . M.fromLists
 --
 -- >        ( 1 2 3 )
 -- >        ( 4 5 6 )
--- > toList ( 7 8 9 ) = [1,2,3,4,5,6,7,8,9]
+-- > toList ( 7 8 9 ) = [1..9]
 toList :: forall m n a. Matrix m n a -> [a]
 {-# INLINE toList #-}
 toList = M.toList . unpackStatic
@@ -667,7 +669,7 @@ getMatrixAsVector = M.getMatrixAsVector . unpackStatic
 --   Example:
 --   setElem @1 @2 0 (1 2 3) = (1 0 3)
 setElem :: forall i j m n a.
-  ( KnownNat i, KnownNat j, 1 <= i, i <= m, 1 <= j, j <= m)
+  ( KnownNat i, KnownNat j, 1 <= i, i <= m, 1 <= j, j <= n)
         => a -- ^ New value.
         -> Matrix m n a -- ^ Original matrix.
         -> Matrix m n a
@@ -753,8 +755,8 @@ setSize = \e -> applyUnary $ M.setSize e newM newN
 
 
 -- | /O(1)/. Extract a submatrix from the given position.
---   The type parameters expected are the same as the value level version
---   of this function 'submatrixUnsafe'.
+--   The type parameters expected are the starting and ending indices
+--   of row and column elements.
 submatrix :: forall iFrom jFrom iTo jTo m n a.
   ( KnownNat iFrom, KnownNat iTo, KnownNat jFrom, KnownNat jTo
   , 1 <= iFrom, 1 <= iTo - iFrom + 1, iTo - iFrom + 1 <= m
@@ -771,8 +773,8 @@ submatrix = applyUnary $ M.submatrix iFrom iTo jFrom jTo
 
 
 -- | /O(1)/. Extract a submatrix from the given position.
---   The type parameters expected are the same as the value level version
---   of this function 'submatrixUnsafe'.
+--   The type parameters are the dimension of the returned matrix, the run-time
+--   indices are the indiced of the top-left element of the new matrix.
 --   Example:
 --
 -- >                           ( 1 2 3 )
@@ -785,13 +787,11 @@ submatrixUnsafe :: forall rows cols m n a.
     -> Int -- ^ Starting column
     -> Matrix m n a -> Matrix rows cols a
 {-# INLINE submatrixUnsafe #-}
-submatrixUnsafe jFrom iFrom =
-  applyUnary $ M.submatrix iFrom (cols-iFrom) jFrom (rows-jFrom)
+submatrixUnsafe iFrom jFrom =
+  applyUnary $ M.submatrix iFrom (iFrom+rows-1) jFrom (jFrom+cols-1)
     where
-      cols = fromInteger $ natVal @cols Proxy
       rows = fromInteger $ natVal @rows Proxy
-
-
+      cols = fromInteger $ natVal @cols Proxy
 
 
 -- | /O(rows*cols)/. Remove a row and a column from a matrix.
@@ -800,10 +800,11 @@ submatrixUnsafe jFrom iFrom =
 -- >                       ( 1 2 3 )
 -- >                       ( 4 5 6 )   ( 1 3 )
 -- > minorMatrixUnsafe 2 2 ( 7 8 9 ) = ( 7 9 )
-minorMatrixUnsafe :: Int -- ^ Row @r@ to remove.
+minorMatrixUnsafe :: (2 <= n, 2 <= m)
+                  => Int -- ^ Row @r@ to remove.
                   -> Int -- ^ Column @c@ to remove.
                   -> Matrix m n a -- ^ Original matrix.
-                  -> Matrix m n a
+                  -> Matrix (m-1) (n-1) a
                      -- ^ Matrix with row @r@ and column @c@ removed.
 {-# INLINE minorMatrixUnsafe #-}
 minorMatrixUnsafe i j = applyUnary $ M.minorMatrix i j
@@ -815,17 +816,17 @@ minorMatrixUnsafe i j = applyUnary $ M.minorMatrix i j
 -- >                   ( 1 2 3 )
 -- >                   ( 4 5 6 )   ( 1 3 )
 -- > minorMatrix @2 @2 ( 7 8 9 ) = ( 7 9 )
-minorMatrix :: forall delRows delCols m n a.
-  ( KnownNat delRows, KnownNat delCols
-  , 0 <= delRows, 0 <= delCols, delRows <= m, delCols <= n)
+minorMatrix :: forall delRow delCol m n a.
+  ( KnownNat delRow, KnownNat delCol
+  , 1 <= delRow, 1 <= delCol, delRow <= m, delCol <= n, 2 <= n, 2 <= m)
     => Matrix m n a -- ^ Original matrix.
-    -> Matrix (m-delRows) (n-delCols) a
+    -> Matrix (m-1) (n-1) a
        -- ^ Matrix with row @r@ and column @c@ removed.
 {-# INLINE minorMatrix #-}
-minorMatrix = applyUnary $ M.minorMatrix delCols delRows
+minorMatrix = applyUnary $ M.minorMatrix delCol delRow
   where
-    delCols = fromInteger $ natVal @delCols Proxy
-    delRows = fromInteger $ natVal @delRows Proxy
+    delCol = fromInteger $ natVal @delCol Proxy
+    delRow = fromInteger $ natVal @delRow Proxy
 
 
 -- | /O(1)/. Make a block-partition of a matrix using a given element as
