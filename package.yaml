@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 
-tested-with: GHC == 8.4.3, GHC == 8.2.2, GHC == 8.0.2, GHC == 7.10.3, GHC == 7.8.4
+tested-with: GHC == 8.4.3, GHC == 8.2.2, GHC == 8.0.2, GHC == 8.0.1
 
 # Metadata used when publishing your package
 synopsis:            Wrapper around matrix that adds matrix sizes to the type-level
@@ -23,7 +23,7 @@ description:         Please see the README on GitHub at <https://github.com/wchr
 
 dependencies:
     - base >= 4.7 && < 5
-    - matrix >= 0.3.6 && < 0.4
+    - matrix >= 0.3.5 && < 0.4
     - deepseq
     - semigroups
     - vector
@@ -46,4 +46,5 @@ tests:
     dependencies:
     - matrix-static
     - tasty
+    - tasty-hunit
 

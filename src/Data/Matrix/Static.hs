@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveTraversable #-}
@@ -28,8 +29,8 @@ unsafe variant of the function with the postfix @Unsafe@.
 
 module Data.Matrix.Static (
     -- * Matrix type
-    Matrix , prettyMatrix
-  , nrows , ncols
+    Matrix, prettyMatrix
+  , nrows, ncols
   , forceMatrix
     -- * Builders
   , matrix
@@ -41,24 +42,30 @@ module Data.Matrix.Static (
   , diagonal, diagonalUnsafe
   , permMatrix
     -- * List conversions
-  , fromList , fromLists
-  , toList   , toLists
+  , fromList, fromListUnsafe, fromLists, fromListsUnsafe
+  , toList, toLists
     -- * Accessing
-  , getElem , (!) , unsafeGet , (!.) , safeGet, safeSet
-  , getRow  , safeGetRow , getCol , safeGetCol
+  , getElem, (!), unsafeGet, (!.), safeGet, safeSet
+  , getRow, getCol
+#if MIN_VERSION_matrix(0,3,6)
+  , safeGetRow, safeGetCol
+#endif
   , getDiag
   , getMatrixAsVector
     -- * Manipulating matrices
   , (.*), (^*)
   , setElem
   , unsafeSet
-  , transpose , setSize , extendTo
+  , transpose, setSize, extendTo
   , inverse, rref
-  , mapRow , mapRowUnsafe, mapCol, mapColUnsafe, mapPos
+  , mapRow, mapRowUnsafe, mapCol, mapColUnsafe
+#if MIN_VERSION_matrix(0,3,6)
+  , mapPos
+#endif
     -- * Submatrices
     -- ** Splitting blocks
-  , submatrix , submatrixUnsafe
-  , minorMatrix , minorMatrixUnsafe
+  , submatrix, submatrixUnsafe
+  , minorMatrix, minorMatrixUnsafe
   , splitBlocks
    -- ** Joining blocks
   , (<|>) , (<->)
@@ -76,16 +83,16 @@ module Data.Matrix.Static (
   , multStrassenMixed
     -- * Linear transformations
   , scaleMatrix
-  , scaleRow , scaleRowUnsafe
+  , scaleRow, scaleRowUnsafe
   , combineRows
-  , switchRows , switchRowsUnsafe
-  , switchCols , switchColsUnsafe
+  , switchRows, switchRowsUnsafe
+  , switchCols, switchColsUnsafe
     -- * Decompositions
-  , luDecomp , luDecompUnsafe
+  , luDecomp, luDecompUnsafe
   , luDecomp', luDecompUnsafe'
   , cholDecomp
     -- * Properties
-  , trace , diagProd
+  , trace, diagProd
     -- ** Determinants
   , detLaplace
   , detLU
@@ -110,10 +117,13 @@ import qualified Data.Vector as V
 -- | A matrix over the type @f@ with @m@ rows and @n@ columns. This just wraps
 --   the 'Data.Matrix.Static.Matrix' constructor and adds size information to
 --   the type
-newtype Matrix (m :: Nat) (n :: Nat) (f :: *) = Matrix (M.Matrix f)
+newtype Matrix (m :: Nat) (n :: Nat) (a :: *) = Matrix (M.Matrix a)
   deriving ( Eq, Functor, Applicative, Foldable, Traversable
-           , S.Semigroup, Monoid, NFData
+           , Monoid, NFData
            )
+instance Monoid a => S.Semigroup (Matrix m n a) where
+    (<>) = mappend
+
 
 nrows :: forall m n a. KnownNat m => Matrix m n a -> Int
 nrows = const m
@@ -275,6 +285,7 @@ mapCol f = applyUnary $ M.mapCol f j
     where j = fromInteger . natVal $ Proxy @j
 
 
+#if MIN_VERSION_matrix(0,3,6)
 -- | /O(rows*cols)/. Map a function over elements.
 --   Example:
 --
@@ -288,6 +299,8 @@ mapPos :: ((Int, Int) -> a -> b)
        -> Matrix m n b
 {-# INLINE mapPos #-}
 mapPos f = applyUnary (M.mapPos f)
+#endif
+
 
 -- BUILDERS
 
@@ -392,7 +405,7 @@ fromListUnsafe :: forall m n a. (KnownNat m, KnownNat n)
                => [a] -- ^ List of elements
                -> Matrix m n a
 {-# INLINE fromListUnsafe #-}
-fromListUnsafe = Matrix . M.fromList n m
+fromListUnsafe = Matrix . M.fromList m n
   where
     n = fromIntegral $ natVal @n Proxy
     m = fromIntegral $ natVal @m Proxy
@@ -607,12 +620,6 @@ getRow :: Int -> Matrix m n a -> V.Vector a
 getRow i = M.getRow i . unpackStatic
 
 
--- | Varian of 'getRow' that returns a maybe instead of an error
-safeGetRow :: Int -> Matrix m n a -> Maybe (V.Vector a)
-{-# INLINE safeGetRow #-}
-safeGetRow i = M.safeGetRow i . unpackStatic
-
-
 -- | /O(1)/. Get a column of a matrix as a vector.
 --   The range of the input is not checked and must be between 1 and n
 getCol :: Int -> Matrix m n a -> V.Vector a
@@ -620,10 +627,18 @@ getCol :: Int -> Matrix m n a -> V.Vector a
 getCol i = M.getCol i . unpackStatic
 
 
+#if MIN_VERSION_matrix(0,3,6)
+-- | Varian of 'getRow' that returns a maybe instead of an error
+safeGetRow :: Int -> Matrix m n a -> Maybe (V.Vector a)
+{-# INLINE safeGetRow #-}
+safeGetRow i = M.safeGetRow i . unpackStatic
+
+
 -- | Varian of 'getCol' that returns a maybe instead of an error
 safeGetCol :: Int -> Matrix m n a -> Maybe (V.Vector a)
 {-# INLINE safeGetCol #-}
 safeGetCol i = M.safeGetCol i . unpackStatic
+#endif
 
 
 -- | /O(min rows cols)/. Diagonal of a /not necessarily square/ matrix.
