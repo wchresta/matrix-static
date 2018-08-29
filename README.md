@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.org/wchresta/matrix-static.svg?branch=master)](https://travis-ci.org/wchresta/matrix-static)
+[![Hackage](https://img.shields.io/hackage/v/matrix-static.svg)](https://hackage.haskell.org/package/matrix-static)
+[![Hackage Deps](https://img.shields.io/hackage-deps/v/matrix-static.svg)](http://packdeps.haskellers.com/reverse/matrix-static)
+
+
 # matrix-static
 
 A static wrapper around the [https://hackage.haskell.org/package/matrix|matrix] library. It provides a data type `Matrix m n a` derived from `matrix`'s `Matrix a` with additional information about the matix dimension `m n` as type-level Nat's.
