@@ -84,7 +84,7 @@ module Data.Matrix.Static (
     -- * Linear transformations
   , scaleMatrix
   , scaleRow, scaleRowUnsafe
-  , combineRows
+  , combineRows, combineRowsUnsafe
   , switchRows, switchRowsUnsafe
   , switchCols, switchColsUnsafe
     -- * Decompositions
@@ -293,8 +293,9 @@ mapCol f = applyUnary $ M.mapCol f j
 --
 -- >                            ( 1 2 3 )   ( 0 -1 -2 )
 -- >                            ( 4 5 6 )   ( 1  0 -1 )
--- > mapPos (\(r,c) a -> r - c) ( 7 8 9 ) = ( 2  1  0 )
+-- > mapPos (\(r,c) _ -> r - c) ( 7 8 9 ) = ( 2  1  0 )
 --
+--   Only available when used with @matrix >= 0.3.6@!
 mapPos :: ((Int, Int) -> a -> b)
           -- ^ Function takes the current Position as additional argument.
        -> Matrix m n a
@@ -631,12 +632,14 @@ getCol i = M.getCol i . unpackStatic
 
 #if MIN_VERSION_matrix(0,3,6)
 -- | Varian of 'getRow' that returns a maybe instead of an error
+--   Only available when used with @matrix >= 0.3.6@!
 safeGetRow :: Int -> Matrix m n a -> Maybe (V.Vector a)
 {-# INLINE safeGetRow #-}
 safeGetRow i = M.safeGetRow i . unpackStatic
 
 
--- | Varian of 'getCol' that returns a maybe instead of an error
+-- | Variant of 'getCol' that returns a maybe instead of an error
+--   Only available when used with @matrix >= 0.3.6@!
 safeGetCol :: Int -> Matrix m n a -> Maybe (V.Vector a)
 {-# INLINE safeGetCol #-}
 safeGetCol i = M.safeGetCol i . unpackStatic
@@ -1028,8 +1031,8 @@ scaleRowUnsafe a i = applyUnary (M.scaleRow a i)
 --   Example:
 --
 -- >               ( 1 2 3 )   (  1  2  3 )
--- >               ( 4 5 6 )   (  8 10 12 )
--- > scaleRow @2 2 ( 7 8 9 ) = (  7  8  9 )
+-- >               ( 4 5 6 )   ( 12 15 18 )
+-- > scaleRow @2 3 ( 7 8 9 ) = (  7  8  9 )
 scaleRow :: forall i m n a. (KnownNat i, Num a)
          => a -> Matrix m n a -> Matrix m n a
 {-# INLINE scaleRow #-}
@@ -1200,14 +1203,19 @@ luDecompUnsafe =
 --
 --   Example:
 --
--- >           ( 1 0 )    ( 2 1 )  (   1    0 0 )  ( 0 0 1
+-- >           ( 1 0 )    ( 2 1 )  (   1    0 0 )  ( 0 0 1 )
 -- >           ( 0 2 )    ( 0 2 )  (   0    1 0 )  ( 0 1 0 )  ( 1 0 )
 -- > luDecomp' ( 2 1 ) = (( 0 0 ), ( 1/2 -1/4 1 ), ( 1 0 0 ), ( 0 1 ), -1 , 1 )
 --
 --   'Nothing' is returned if no LU decomposition exists.
 luDecomp' :: (Ord a, Fractional a)
          => Matrix m n a
-         -> Maybe (Matrix m n a, Matrix m n a, Matrix m n a, Matrix m n a, a, a)
+         -> Maybe ( Matrix m n a
+                  , Matrix m m a
+                  , Matrix m m a
+                  , Matrix n n a
+                  , a
+                  , a)
 {-# INLINE luDecomp' #-}
 luDecomp' = fmap packDecomp . M.luDecomp' . unpackStatic
   where
@@ -1217,7 +1225,12 @@ luDecomp' = fmap packDecomp . M.luDecomp' . unpackStatic
 -- | Unsafe version of 'luDecomp''. It fails when the input matrix is singular.
 luDecompUnsafe' :: (Ord a, Fractional a)
     => Matrix m n a
-    -> (Matrix m n a, Matrix m n a, Matrix m n a, Matrix m n a, a, a)
+    -> ( Matrix m n a
+       , Matrix m m a
+       , Matrix m m a
+       , Matrix n n a
+       , a
+       , a)
 {-# INLINE luDecompUnsafe' #-}
 luDecompUnsafe' =
     fromMaybe (error "luDecompUnsafe of singular matrix") . luDecomp'

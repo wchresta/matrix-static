@@ -31,7 +31,7 @@ docExamples =
           fromListUnsafe [1,3,3,4,6,6,7,9,9]
 #if MIN_VERSION_matrix(0,3,6)
   , testCase "mapPos" $
-      mapPos (\(r,c) a -> r - c) mat33 @?=
+      mapPos (\(r,c) _ -> r - c) mat33 @?=
           fromListUnsafe [0,(-1),(-2),1,0,(-1),2,1,0]
 #endif
   , testCase "zero" $
@@ -82,4 +82,44 @@ docExamples =
   , testCase "<|>" $
       fromListUnsafe @2 @2 [1,2,3,4] <|> fromListUnsafe @2 @2 [6,7,8,9] @?=
           fromListUnsafe @2 @4 @Int [1,2,6,7,3,4,8,9]
+  , testCase "<->" $
+      fromListUnsafe @2 @2 [1,2,3,4] <-> fromListUnsafe @2 @2 [6,7,8,9] @?=
+          fromListUnsafe @4 @2 @Int [1,2,3,4,6,7,8,9]
+  , testCase "scaleMatrix" $
+      scaleMatrix 2 mat33 @?= fromListUnsafe [2,4,6,8,10,12,14,16,18]
+  , testCase "scaleRowUnsafe" $
+      scaleRowUnsafe 3 2 mat33 @?= fromListUnsafe [1,2,3,12,15,18,7,8,9]
+  , testCase "scaleRow" $
+      scaleRow @2 3 mat33 @?= fromListUnsafe [1,2,3,12,15,18,7,8,9]
+  , testCase "ombineRowsUnsafe" $
+      combineRowsUnsafe 2 2 1 mat33 @?= fromListUnsafe [1,2,3,6,9,12,7,8,9]
+  , testCase "combineRows" $
+      combineRows @2 @1 2 mat33 @?= fromListUnsafe [1,2,3,6,9,12,7,8,9]
+  , testCase "switchRowsUnsafe" $
+      switchRowsUnsafe 1 2 mat33 @?= fromListUnsafe [4,5,6,1,2,3,7,8,9]
+  , testCase "switchRows" $
+      switchRows @1 @2 mat33 @?= fromListUnsafe [4,5,6,1,2,3,7,8,9]
+  , testCase "switchColsUnsafe" $
+      switchColsUnsafe 1 2 mat33 @?= fromListUnsafe [2,1,3,5,4,6,8,7,9]
+  , testCase "switchCols" $
+      switchCols @1 @2 mat33 @?= fromListUnsafe [2,1,3,5,4,6,8,7,9]
+  , testCase "luDecomp" $
+      (luDecomp $ fromListUnsafe @3 @3 @Double [1,2,0,0,2,1,2,0,2]) @?=
+          Just ( fromListUnsafe [2,0,2,0,2,(-1),0,0,2]
+               , fromListUnsafe [1,0,0,(1/2),1,0,0,1,1]
+               , fromListUnsafe [0,0,1,1,0,0,0,1,0]
+               , 1 )
+  , testCase "luDecomp'" $
+      (luDecomp' $ fromListUnsafe @3 @2 @Double [1,0,0,2,2,1]) @?=
+          Just ( fromListUnsafe [2,1,0,2,0,0]
+               , fromListUnsafe [1,0,0,0,1,0,(1/2),(-1/4),1]
+               , fromListUnsafe [0,0,1,0,1,0,1,0,0]
+               , fromListUnsafe [1,0,0,1]
+               , -1
+               , 1 )
+  -- TODO: Test case for cholDecomp
+  , testCase "trace" $
+      trace mat33 @?= 15
+  , testCase "diagProd" $
+      diagProd mat33 @?= 45
   ]
