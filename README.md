@@ -5,7 +5,7 @@
 
 # matrix-static
 
-A static wrapper around the [https://hackage.haskell.org/package/matrix|matrix] library. It provides a data type `Matrix m n a` derived from `matrix`'s `Matrix a` with additional information about the matix dimension `m n` as type-level Nat's.
+A static wrapper around the [matrix](https://hackage.haskell.org/package/matrix) library. It provides a data type `Matrix m n a` derived from `matrix`'s `Matrix a` with additional information about the matix dimension `m n` as type-level Nat's.
 
 (Almost) all functions provided by `Data.Matrix` are wrapped. These wrappers guarantee during compile time that the matrix dimension are correct. As such, runtime errors due to mismatching matrix dimensions are minimized. Also, some performance improvements are achieved by not having to do dimension checks during runtime.
 
