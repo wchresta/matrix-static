@@ -6,6 +6,9 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+#if __GLASGOW_HASKELL__ >= 806
+{-# LANGUAGE NoStarIsType #-}
+#endif
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -103,6 +106,7 @@ module Data.Matrix.Static (
   ) where
 
 import Control.DeepSeq (NFData)
+import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 import GHC.TypeLits
@@ -117,7 +121,7 @@ import qualified Data.Vector as V
 -- | A matrix over the type @f@ with @m@ rows and @n@ columns. This just wraps
 --   the 'Data.Matrix.Static.Matrix' constructor and adds size information to
 --   the type
-newtype Matrix (m :: Nat) (n :: Nat) (a :: *) = Matrix (M.Matrix a)
+newtype Matrix (m :: Nat) (n :: Nat) (a :: Type) = Matrix (M.Matrix a)
   deriving ( Eq, Functor, Applicative, Foldable, Traversable
            , Monoid, NFData
            )
@@ -688,7 +692,8 @@ setElem x = applyUnary $ M.setElem x (i,j)
 unsafeSet :: a -- ^ New value.
         -> (Int,Int) -- ^ Position to replace.
         -> Matrix m n a -- ^ Original matrix.
-        -> Matrix m n a -- ^ Matrix with the given position replaced with the given value.
+        -> Matrix m n a 
+           -- ^ Matrix with the given position replaced with the given value.
 {-# INLINE unsafeSet #-}
 unsafeSet x ij = applyUnary $ M.unsafeSet x ij
 
@@ -1146,7 +1151,8 @@ switchCols = applyUnary (M.switchCols i k)
 --   * /PM = LU/.
 --
 --   These properties are only guaranteed when the input matrix is invertible.
---   An additional property matches thanks to the strategy followed for pivoting:
+--   An additional property matches thanks to the strategy followed for 
+--   pivoting:
 --
 --   * /L_(i,j)/ <= 1, for all /i,j/.
 --
