@@ -1,3 +1,6 @@
-# Changelog for matrix-static
+# Version 0.1.1 - 15.10.2018
 
-## Unreleased changes
+* Dropped `semigroup` dependency
+* Make compatible with GHC 8.6
+
+
