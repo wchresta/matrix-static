@@ -857,17 +857,17 @@ minorMatrix = applyUnary $ M.minorMatrix delCol delRow
 --   no way to have a type safe variant of this functon where the pivot element
 --   is given at run-time.
 --
-splitBlocks :: forall i j m n a.
-  (KnownNat i, KnownNat j, 1 <= i, i+1 <= m, 1 <= j, j+1 <= n)
-    => Matrix m n a -- ^ Matrix to split.
-    -> ( Matrix    i  j a, Matrix    i  (n-j) a
-       , Matrix (n-i) j a, Matrix (m-i) (n-j) a
+splitBlocks :: forall mt nl mb nr a.
+  (KnownNat mt, KnownNat nl, 1 <= mt, 1 <= mb, 1 <= nl, 1 <= nr)
+    => Matrix (mt+mb) (nl+nr) a -- ^ Matrix to split.
+    -> ( Matrix mt nl a, Matrix mt nr a
+       , Matrix mb nl a, Matrix mb nr a
        ) -- ^ (TL,TR,BL,BR)
 {-# INLINE[1] splitBlocks #-}
 splitBlocks mat =
-  let i = fromInteger $ natVal @i Proxy
-      j = fromInteger $ natVal @j Proxy
-      (x,y,z,w) = M.splitBlocks i j $ unpackStatic mat
+  let mt = fromInteger $ natVal @mt Proxy
+      nl = fromInteger $ natVal @nl Proxy
+      (x,y,z,w) = M.splitBlocks mt nl $ unpackStatic mat
    in (Matrix x, Matrix y, Matrix z, Matrix w)
 
 
