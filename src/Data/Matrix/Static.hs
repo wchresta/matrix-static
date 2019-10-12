@@ -37,7 +37,9 @@ module Data.Matrix.Static (
   , forceMatrix
     -- * Builders
   , matrix
+  , RowVector
   , rowVector
+  , ColumnVector
   , colVector
     -- ** Special matrices
   , zero
@@ -928,6 +930,8 @@ Matrix x <-> Matrix y = Matrix $ x M.<-> y
 
 -- | A row vector (a matrix with one row).
 type RowVector = Matrix 1
+
+-- | A column vector (a matrix with one column).
 type ColumnVector m = Matrix m 1
 
 
