@@ -27,7 +27,6 @@ dependencies:
     - deepseq
     - vector
     - ghc-typelits-natnormalise
-    - ghc-typelits-knownnat
 
 library:
   source-dirs: src
