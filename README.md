@@ -2,10 +2,11 @@
 [![Hackage](https://img.shields.io/hackage/v/matrix-static.svg)](https://hackage.haskell.org/package/matrix-static)
 [![Hackage Deps](https://img.shields.io/hackage-deps/v/matrix-static.svg)](http://packdeps.haskellers.com/reverse/matrix-static)
 
-
 # matrix-static
 
 A static wrapper around the [matrix](https://hackage.haskell.org/package/matrix) library. It provides a data type `Matrix m n a` derived from `matrix`'s `Matrix a` with additional information about the matix dimension `m n` as type-level Nat's.
+
+An alternative to this library is [static-tensor](https://hackage.haskell.org/package/static-tensor-0.2.1.0/docs/Data-Matrix-Static.html) that might better fit your needs. Choose `matrix-static` if you are familiar with `matrix` and want more guarantees at compile time. Choose `static-tensor` for most other use cases.
 
 (Almost) all functions provided by `Data.Matrix` are wrapped. These wrappers guarantee during compile time that the matrix dimension are correct. As such, runtime errors due to mismatching matrix dimensions are minimized. Also, some performance improvements are achieved by not having to do dimension checks during runtime.
 
