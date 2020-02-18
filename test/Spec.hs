@@ -4,6 +4,7 @@
 module Main where
 
 import Data.Matrix.Static
+import Data.Monoid (Sum(Sum), Product(Product))
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -11,7 +12,33 @@ main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Unit Tests" [ docExamples ]
+tests = testGroup "Unit Tests" [ docExamples, instanceTests ]
+
+instanceTests :: TestTree
+instanceTests =
+  let u = fromListUnsafe @2 @2 @(Int -> Int) (map (*) [1,2,3,4])
+      v = fromListUnsafe @2 @2 @(Int -> Int) (map (+) [3,-4,0,2])
+      w = fromListUnsafe @2 @2 @Int [4,-1,2,2]
+      a = fromListUnsafe @2 @2 @(Sum Int) (map Sum [-1,-4,0,2])
+      x = 2
+      f = (+5)
+      p = fromListUnsafe @2 @2 @Int [2,2,2,2]
+   in testGroup "Instance Tests"
+  [ testGroup "Applicative laws"
+    [ testCase "identitiy" $ pure id <*> w @?= w
+    , testCase "composition" $ pure (.) <*> u <*> v <*> w @?= u <*> (v <*> w)
+    , testCase "homomorphism" $ pure f <*> pure x @?= (pure (f x) :: Matrix 2 2 Int)
+    , testCase "interchange" $ u <*> pure x @?= (pure ($ x) <*> u :: Matrix 2 2 Int)
+    ]
+  , testGroup "Monoidal laws"
+    [ testCase "right identity" $ a <> mempty @?= a
+    , testCase "left identity" $ mempty <> a @?= a
+    , testCase "associativity" $ 
+        let b = fromListUnsafe @2 @2 @(Sum Int) (map Sum [-1,-4,0,2])
+            c = fromListUnsafe @2 @2 @(Sum Int) (map Sum [-1,-4,0,2])
+        in (a <> b) <> c @?= a <> (b <> c)
+    ]
+  ]
 
 docExamples :: TestTree
 docExamples =
@@ -38,7 +65,7 @@ docExamples =
       zero @2 @2 @Int @?= fromListUnsafe [0,0,0,0]
   , testCase "matrix" $
       (matrix (\(i,j) -> 2*i-j) :: Matrix 2 4 Int) @?=
-          fromListUnsafe [1,0,(-1),(-2),3,2,1,0]
+          fromListUnsafe [1,0,-1,-2,3,2,1,0]
   , testCase "identity" $
       identity @3 @Int @?=
           fromListUnsafe [1,0,0,0,1,0,0,0,1]
@@ -123,3 +150,5 @@ docExamples =
   , testCase "diagProd" $
       diagProd mat33 @?= 45
   ]
+
+
