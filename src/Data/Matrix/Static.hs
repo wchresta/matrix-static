@@ -106,9 +106,11 @@ module Data.Matrix.Static (
 
   ) where
 
+import Control.Applicative (Applicative(..), liftA2)
 import Control.DeepSeq (NFData)
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
+import Data.Monoid (Monoid(..))
 import Data.Proxy (Proxy(..))
 import GHC.TypeLits
   ( Nat, KnownNat, natVal
@@ -123,14 +125,20 @@ import qualified Data.Vector as V
 --   the 'Data.Matrix.Static.Matrix' constructor and adds size information to
 --   the type
 newtype Matrix (m :: Nat) (n :: Nat) (a :: Type) = Matrix (M.Matrix a)
-  deriving ( Eq, Functor, Applicative, Foldable, Traversable
-           , Monoid, NFData
-           )
+  deriving ( Eq, Functor, Foldable, Traversable , NFData )
+
 #if MIN_VERSION_base(4,10,0)
-instance Monoid a => S.Semigroup (Matrix m n a) where
-    (<>) = applyBinary mappend
+instance (KnownNat m, KnownNat n, Monoid a) => S.Semigroup (Matrix m n a) where
+    (<>) = mappend
 #endif
 
+instance (KnownNat m, KnownNat n) => Applicative (Matrix m n) where
+  pure a = matrix (const a)
+  m <*> n = matrix (\ij -> (m!ij) (n!ij))
+
+instance (KnownNat m, KnownNat n, Monoid a) => Monoid (Matrix m n a) where
+  mempty = pure mempty
+  mappend = liftA2 mappend
 
 nrows :: forall m n a. KnownNat m => Matrix m n a -> Int
 nrows = const m
