@@ -1,3 +1,6 @@
+# Version 0.3 - 17.02.2020
+* Fix Applicative and Monoid instances (thanks @davidsd)
+
 # Version 0.2 - 16.10.2018
 * Fix bug with the types of splitBlocks (Incompatible change)
 

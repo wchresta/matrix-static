@@ -1,16 +1,16 @@
 name:                matrix-static
-version:             0.2.1
+version:             0.3
 github:              "wchresta/matrix-static"
 license:             BSD3
 author:              "Wanja Chresta"
 maintainer:          "wanja.hs@chrummibei.ch"
-copyright:           "2018, Wanja Chresta"
+copyright:           "2020, Wanja Chresta"
 
 extra-source-files:
 - README.md
 - ChangeLog.md
 
-tested-with: GHC == 8.6.1, GHC == 8.4.3, GHC == 8.2.2, GHC == 8.0.2, GHC == 8.0.1
+tested-with: GHC == 8.8.2, GHC == 8.6.5, GHC == 8.6.4, GHC == 8.4.4, GHC == 8.2.2, GHC == 8.0.2
 
 # Metadata used when publishing your package
 synopsis:            Type-safe matrix operations

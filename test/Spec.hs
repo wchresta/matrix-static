@@ -4,7 +4,7 @@
 module Main where
 
 import Data.Matrix.Static
-import Data.Monoid (Sum(Sum), Product(Product))
+import Data.Monoid (Sum(Sum), Product(Product), (<>))
 import Test.Tasty
 import Test.Tasty.HUnit
 
